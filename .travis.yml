@@ -2,10 +2,7 @@
 
 language: python
 python:
-  - 3.8
   - 3.7
-  - 3.6
-  - 3.5
 
 # Command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install: pip install -U tox-travis
@@ -18,12 +15,18 @@ script: tox
 # following command to finish PyPI deployment setup:
 # $ travis encrypt --add deploy.password
 deploy:
-  provider: pypi
-  distributions: sdist bdist_wheel
-  user: radioactivedroid
-  password:
-    secure: PLEASE_REPLACE_ME
-  on:
-    tags: true
-    repo: RadioactiveDroid/bpoptimizer
-    python: 3.8
+  - provider: pypi
+    distributions: sdist bdist_wheel
+    user: radioactivedroid
+    password:
+      secure: $PYPI_PASSWORD
+    on:
+      tags: true
+      repo: RadioactiveDroid/bpoptimizer
+      python: 3.7
+  - provider: pages
+    skip_cleanup: true
+    github_token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
+    keep_history: true
+    on:
+      branch: docs
