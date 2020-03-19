@@ -79,7 +79,7 @@ class Floor:
         self.shuffle()  # Initial shuffle to initialize canvas for display purposes
 
     @property
-    def count(self):
+    def count(self) -> int:
         """Returns the number of colours in the floor
 
         Returns:
@@ -87,7 +87,7 @@ class Floor:
         """
         return len(np.unique(self.floor))
 
-    def display(self, scale: int = None, path: str = None):
+    def display(self, scale: int = None, path: str = None) -> np.ndarray:
         """Displays an image of the floor
 
         Args:
@@ -110,17 +110,17 @@ class Floor:
 
         return canvas
 
-    def shuffle(self):
+    def shuffle(self) -> None:
         """Shuffles colours used for floor display
         """
-        random.shuffle(self.CANVAS_COLOURS)
+        random.shuffle(self.CANVAS_COLOURS)  # type: ignore
 
         # We map each integer to a colour, turning our floor back into a list of pixels
         canvas = np.array(np.vectorize(self.CANVAS_COLOURS.get)(self.floor.flatten())).T
         self._canvas = canvas.reshape(self.FLOOR_WIDTH, self.FLOOR_WIDTH, 3)
 
     @staticmethod
-    def simplify_image(image: np.ndarray):
+    def simplify_image(image: np.ndarray) -> np.ndarray:
         """Removes pixel data from an image to produce an array where each pixel is
         represented by a unique integer
 
@@ -136,8 +136,8 @@ class Floor:
 
         # Convert to tuples which are hashable and allow for a dict when simplifying
         colours = [tuple(colour) for colour in np.unique(image, axis=0)]
-        colours = dict(zip(colours, range(len(colours))))
+        colours_dict = dict(zip(colours, range(len(colours))))
 
-        image = np.array([colours[tuple(pixel)] for pixel in image])
+        image = np.array([colours_dict[tuple(pixel)] for pixel in image])
 
         return image.reshape(dims)  # Reshape to original size
