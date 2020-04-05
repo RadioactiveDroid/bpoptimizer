@@ -3,6 +3,7 @@ from typing import List, Tuple, Union
 
 import random
 import itertools
+import warnings
 
 import numpy as np
 from scipy.spatial.distance import cdist
@@ -96,10 +97,15 @@ class Floor:
         """
         return len(np.unique(self.floor))
 
-    def display(self, scale: int = None, path: str = None) -> np.ndarray:
+    def display(
+        self, spot: Tuple[int, int] = None, scale: int = None, path: str = None
+    ) -> np.ndarray:
         """Displays an image of the floor
 
         Args:
+            spot (Tuple[int, int]): if provided, draws the location, lines to all unique
+                                    colours from the location and writes the distance to
+                                    farther away colours as well
             scale (int, optional): factor to upscale original image by, defaults to 30
             path (str, optional): saves image to specified path if provided along with
                                   returning image as numpy array
@@ -120,9 +126,71 @@ class Floor:
         if scale is None:
             scale = self.CANVAS_SCALE
 
+        thickness = round(scale / 10)
+        text_scale = scale / 45
+
         canvas = cv2.resize(
             self._canvas, None, fx=scale, fy=scale, interpolation=cv2.INTER_NEAREST
         )
+
+        if spot:
+            if scale < 20:
+                warnings.warn(
+                    "A scale below 20 will likely result in an unreadable image."
+                )
+
+            spot_location = (int((spot[1] + 0.5) * scale), int((spot[0] + 0.5) * scale))
+
+            cv2.circle(
+                canvas,
+                spot_location,
+                radius=round(scale / 10),
+                color=self.WHITE,
+                thickness=thickness,
+                lineType=cv2.LINE_AA,
+            )
+
+            for colour, (target, distance) in self._target_dict[spot].items():
+                target_location = (
+                    int((target[1] + 0.5) * scale),
+                    int((target[0] + 0.5) * scale),
+                )
+
+                cv2.line(
+                    canvas,
+                    spot_location,
+                    target_location,
+                    color=self.WHITE,
+                    thickness=thickness,
+                    lineType=cv2.LINE_AA,
+                )
+
+            for colour, (target, distance) in self._target_dict[spot].items():
+                target_location = (
+                    int((target[1] + 0.5) * scale),
+                    int((target[0] + 0.5) * scale),
+                )
+                if distance > 2:
+                    cv2.putText(
+                        canvas,
+                        f"{distance:.1f}",
+                        target_location,
+                        fontFace=cv2.FONT_HERSHEY_DUPLEX,
+                        fontScale=text_scale,
+                        color=self.BLACK,
+                        thickness=thickness,
+                        lineType=cv2.LINE_AA,
+                    )
+                    cv2.putText(
+                        canvas,
+                        f"{distance:.1f}",
+                        target_location,
+                        fontFace=cv2.FONT_HERSHEY_DUPLEX,
+                        fontScale=text_scale,
+                        color=self.WHITE,
+                        thickness=round(thickness * 0.25),
+                        lineType=cv2.LINE_AA,
+                    )
 
         if path:
             cv2.imwrite(path, cv2.cvtColor(cv2.COLOR_BGR2RGB))
