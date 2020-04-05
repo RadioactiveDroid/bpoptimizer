@@ -1,15 +1,23 @@
 """This class is used for internally representing a BlockParty floor"""
-from typing import Union
+from typing import List, Tuple, Union
 
 import random
-import cv2
+import itertools
+
 import numpy as np
+from scipy.spatial.distance import cdist
+
+import cv2
+from tqdm import tqdm
 
 
 class Floor:
     # Used to define requirements expected of given floor
     FLOOR_WIDTH = 48
     MAX_COLOURS = 16
+
+    COORDS = list(itertools.product(range(FLOOR_WIDTH), range(FLOOR_WIDTH)))
+    DIST_LOOKUP = cdist(COORDS, COORDS).reshape((FLOOR_WIDTH,) * 4)
 
     # Constants to recolour and scale floor for display purposes
     BLACK = (0, 0, 0)
@@ -76,7 +84,8 @@ class Floor:
             f"given floor has {self.count}"
         )
 
-        self.shuffle()  # Initial shuffle to initialize canvas for display purposes
+        self._recolour = True  # Whether canvas needs to be recoloured before display
+        self._optimized = False  # Whether the optimization matrix has been calculated
 
     @property
     def count(self) -> int:
@@ -98,6 +107,16 @@ class Floor:
         Returns:
             np.ndarray: the image to display represented as a numpy array
         """
+        if self._recolour:
+            # We map each integer to a colour, turning our floor into a list of pixels
+            self._canvas = np.array(
+                np.vectorize(lambda i: list(self.CANVAS_COLOURS.values())[i])(
+                    self.floor.flatten()
+                )
+            ).T.reshape(self.FLOOR_WIDTH, self.FLOOR_WIDTH, 3)
+
+            self._recolour = False
+
         if scale is None:
             scale = self.CANVAS_SCALE
 
@@ -114,10 +133,7 @@ class Floor:
         """Shuffles colours used for floor display
         """
         random.shuffle(self.CANVAS_COLOURS)  # type: ignore
-
-        # We map each integer to a colour, turning our floor back into a list of pixels
-        canvas = np.array(np.vectorize(self.CANVAS_COLOURS.get)(self.floor.flatten())).T
-        self._canvas = canvas.reshape(self.FLOOR_WIDTH, self.FLOOR_WIDTH, 3)
+        self._recolour = True
 
     @staticmethod
     def simplify_image(image: np.ndarray) -> np.ndarray:
@@ -141,3 +157,84 @@ class Floor:
         image = np.array([colours_dict[tuple(pixel)] for pixel in image])
 
         return image.reshape(dims)  # Reshape to original size
+
+    def _optimize(self) -> None:
+        """Builds the target dictionary for every position on the given floor
+
+        This dictionary contains, for each position, the locations of the nearest block
+        of every colour other than the position itself along with the euclidean distance
+        to that location.
+        """
+        self._target_dict = np.full((self.FLOOR_WIDTH, self.FLOOR_WIDTH), None)
+
+        for source in tqdm(self.COORDS):
+            target_dict = {}
+
+            for colour in range(self.count):
+                if self.floor[source] != colour:
+                    target = list(zip(*np.where(self.floor == colour)))
+                    distances = self.DIST_LOOKUP[source][np.where(self.floor == colour)]
+
+                    target_dict[colour] = (
+                        target[np.argmin(distances)],
+                        np.min(distances),
+                    )
+
+            self._target_dict[source] = target_dict
+
+        self._optimized = True
+
+    def get_spots(
+        self, reachable_distance: float = float("inf")
+    ) -> List[Tuple[int, int]]:
+        """Returns a list of the best spots based on how far you are able to travel
+
+        For determining the best spots, we first try to maximize the number of unique
+        colours that can be reached, from those candidates we take the ones which
+        minimize the distance to the farthest colour that can be reached and finally
+        we reduce those candidates by taking the spots with the lowest sum of squared
+        distances to the colours that can be reached. If there are multiple candidates
+        left, all are returned.
+
+        Args:
+            reachable_distance (float, optional): the maximum number of blocks that you
+                                                  can travel, no limit if not provided
+
+        Returns:
+            List[Tuple[int, int]]: a list of coords for the best spots
+        """
+        max_colours, min_farthest, min_total = None, None, None
+
+        if not self._optimized:
+            self._optimize()
+
+        for spot in self.COORDS:
+            distances = np.array(list(zip(*self._target_dict[spot].values()))[1])
+
+            colours = sum(np.where(distances <= reachable_distance, 1, 0))
+            farthest = max(np.where(distances <= reachable_distance, distances, 0))
+            total = sum(np.where(distances <= reachable_distance, distances ** 2, 0))
+
+            if (
+                not max_colours
+                or max_colours < colours
+                or (max_colours == colours and farthest < min_farthest)
+                or (
+                    max_colours == colours
+                    and farthest == min_farthest
+                    and total < min_total
+                )
+            ):
+                max_colours = colours
+                min_farthest = farthest
+                min_total = total
+
+                optimal_spot = [spot]
+            elif (
+                max_colours == colours
+                and min_farthest == farthest
+                and min_total == total
+            ):
+                optimal_spot.append(spot)
+
+        return optimal_spot
