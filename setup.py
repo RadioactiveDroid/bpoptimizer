@@ -10,15 +10,17 @@ with open("README.rst") as readme_file:
 with open("HISTORY.rst") as history_file:
     history = history_file.read()
 
-requirements = ["Click>=7.0", "numpy>=1.18", "opencv-python>=4.1.2"]
-
-setup_requirements = [
-    "pytest-runner",
+requirements = [
+    "Click>=7.0",
+    "numpy>=1.18",
+    "opencv-python>=4.1.2",
+    "scipy>=1.4.1",
+    "tqdm>=4.45.0",
 ]
 
-test_requirements = [
-    "pytest>=3",
-]
+setup_requirements = ["pytest-runner"]
+
+test_requirements = ["pytest>=3"]
 
 setup(
     author="RadioactiveDroid",
@@ -33,7 +35,7 @@ setup(
         "Programming Language :: Python :: 3.7",
     ],
     description="This package allows for reading a BlockParty floor as a 48x48 pixel image and provides analytics including optimized standing positions.",
-    entry_points={"console_scripts": ["bpoptimizer=bpoptimizer.cli:main",],},
+    entry_points={"console_scripts": ["bpoptimizer=bpoptimizer.cli:main"]},
     install_requires=requirements,
     license="MIT license",
     long_description=readme + "\n\n" + history,
