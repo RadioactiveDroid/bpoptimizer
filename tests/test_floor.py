@@ -28,7 +28,7 @@ class TestFloor:
         floor = get_floor("valid_floor")
 
         assert floor.display().shape == ((48 * 30), (48 * 30), 3)
-        assert floor.display(5).shape == ((48 * 5), (48 * 5), 3)
+        assert floor.display(scale=5).shape == ((48 * 5), (48 * 5), 3)
 
 
 class TestFloorExceptions:
@@ -51,3 +51,21 @@ class TestFloorExceptions:
     def test_too_many_colours():
         with pytest.raises(AssertionError):
             get_floor("too_many_colours")
+
+
+class TestOptimize:
+    @staticmethod
+    def test_find_spots():
+        floor = get_floor("valid_floor")
+
+        assert floor.get_spots() == [(23, 23), (23, 24), (24, 23), (24, 24)]
+        assert floor.get_spots(reachable_distance=16) == [
+            (21, 22),
+            (21, 25),
+            (22, 21),
+            (22, 26),
+            (25, 21),
+            (25, 26),
+            (26, 22),
+            (26, 25),
+        ]
