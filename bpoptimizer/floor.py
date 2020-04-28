@@ -1,6 +1,7 @@
 """This class is used for internally representing a BlockParty floor"""
 from typing import List, Tuple, Union
 
+import os
 import random
 import itertools
 import warnings
@@ -62,11 +63,12 @@ class Floor:
             AssertionError: if floor is of unexpected size or has too many colours
         """
         if isinstance(image, str):
-            image = cv2.imread(image)
+            path = os.path.abspath(image)
+            image = cv2.imread(path)
 
             if image is None:
                 raise FileNotFoundError(
-                    f'could not find a valid image for given path, "{str}"'
+                    f'could not find a valid image for given path, "{path}"'
                 )
         elif not isinstance(image, np.ndarray):
             raise TypeError(
@@ -193,7 +195,7 @@ class Floor:
                     )
 
         if path:
-            cv2.imwrite(path, cv2.cvtColor(cv2.COLOR_BGR2RGB))
+            cv2.imwrite(path, cv2.cvtColor(canvas.astype(np.uint8), cv2.COLOR_BGR2RGB))
 
         return canvas
 
