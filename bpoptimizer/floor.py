@@ -7,7 +7,8 @@ import itertools
 import warnings
 
 import numpy as np
-from scipy.spatial.distance import cdist
+import pandas as pd
+from scipy.spatial import cKDTree
 
 import cv2
 from tqdm import tqdm
@@ -18,8 +19,13 @@ class Floor:
     FLOOR_WIDTH = 48
     MAX_COLOURS = 16
 
-    COORDS = list(itertools.product(range(FLOOR_WIDTH), range(FLOOR_WIDTH)))
-    DIST_LOOKUP = cdist(COORDS, COORDS).reshape((FLOOR_WIDTH,) * 4)
+    SPOT_SCALE = 4  # The number of points to consider for each block in each dimension
+    COORDS = list(  # Construct list of all possible standing coordinates
+        itertools.product(
+            np.linspace(0, FLOOR_WIDTH - (1 / SPOT_SCALE), FLOOR_WIDTH * SPOT_SCALE),
+            np.linspace(0, FLOOR_WIDTH - (1 / SPOT_SCALE), FLOOR_WIDTH * SPOT_SCALE),
+        )
+    )
 
     # Constants to recolour and scale floor for display purposes
     BLACK = (0, 0, 0)
@@ -115,6 +121,14 @@ class Floor:
         Returns:
             np.ndarray: the image to display represented as a numpy array
         """
+
+        # Used to offset coordinates to where they should be drawn in display
+        def offset(spot: Tuple[float, float]):
+            return tuple(
+                int((x + (0.5 / self.SPOT_SCALE)) * scale)  # type: ignore
+                for x in spot
+            )
+
         if self._recolour:
             # We map each integer to a colour, turning our floor into a list of pixels
             self._canvas = np.array(
@@ -152,12 +166,15 @@ class Floor:
             )
 
         if spot:
+            if not self._optimized:
+                self._optimize()
+
             if scale < 20:
                 warnings.warn(
                     "A scale below 20 will likely result in an unreadable image."
                 )
 
-            spot_location = (int((spot[1] + 0.5) * scale), int((spot[0] + 0.5) * scale))
+            spot_location = offset(spot)[::-1]
 
             cv2.circle(
                 canvas,
@@ -169,10 +186,7 @@ class Floor:
             )
 
             for colour, (target, distance) in self._target_dict[spot].items():
-                target_location = (
-                    int((target[1] + 0.5) * scale),
-                    int((target[0] + 0.5) * scale),
-                )
+                target_location = offset(target)[::-1]
 
                 cv2.line(
                     canvas,
@@ -183,11 +197,10 @@ class Floor:
                     lineType=cv2.LINE_AA,
                 )
 
+            # We make two seperate loops to ensure that text is always above lines
             for colour, (target, distance) in self._target_dict[spot].items():
-                target_location = (
-                    int((target[1] + 0.5) * scale),
-                    int((target[0] + 0.5) * scale),
-                )
+                target_location = offset(target)[::-1]
+
                 if distance > 2:
                     cv2.putText(
                         canvas,
@@ -251,23 +264,22 @@ class Floor:
         of every colour other than the position itself along with the euclidean distance
         to that location.
         """
-        self._target_dict = np.full((self.FLOOR_WIDTH, self.FLOOR_WIDTH), None)
+        # Scale up floor using Kronecker product to match scale of COORDS
+        scaled_floor = np.kron(self.floor, np.ones((self.SPOT_SCALE, self.SPOT_SCALE)))
+        target_dict = pd.DataFrame(None, index=self.COORDS)
 
-        for source in tqdm(self.COORDS):
-            target_dict = {}
+        for colour in tqdm(range(self.count)):
+            # Create k-d tree for all coordinate matching the current colour
+            tree = cKDTree(
+                np.array(self.COORDS)[
+                    (scaled_floor == colour).reshape(len(self.COORDS))
+                ]
+            )
 
-            for colour in range(self.count):
-                if self.floor[source] != colour:
-                    target = list(zip(*np.where(self.floor == colour)))
-                    distances = self.DIST_LOOKUP[source][np.where(self.floor == colour)]
+            distance, target = tree.query(self.COORDS, k=1)
+            target_dict[colour] = list(zip(tree.data[target], distance))
 
-                    target_dict[colour] = (
-                        target[np.argmin(distances)],
-                        np.min(distances),
-                    )
-
-            self._target_dict[source] = target_dict
-
+        self._target_dict = target_dict.to_dict("index")
         self._optimized = True
 
     def get_spots(
@@ -294,7 +306,7 @@ class Floor:
         if not self._optimized:
             self._optimize()
 
-        for spot in self.COORDS:
+        for spot in tqdm(self.COORDS):
             distances = np.array(list(zip(*self._target_dict[spot].values()))[1])
 
             colours = sum(np.where(distances <= reachable_distance, 1, 0))
