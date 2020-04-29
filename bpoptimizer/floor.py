@@ -135,6 +135,22 @@ class Floor:
             self._canvas, None, fx=scale, fy=scale, interpolation=cv2.INTER_NEAREST
         )
 
+        for line in range(0, self.FLOOR_WIDTH * scale, scale):
+            cv2.line(
+                canvas,
+                (line, 0),
+                (line, self.FLOOR_WIDTH * scale),
+                color=self.BLACK,
+                thickness=1,
+            )
+            cv2.line(
+                canvas,
+                (0, line),
+                (self.FLOOR_WIDTH * scale, line),
+                color=self.BLACK,
+                thickness=1,
+            )
+
         if spot:
             if scale < 20:
                 warnings.warn(
