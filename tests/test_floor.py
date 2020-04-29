@@ -11,8 +11,8 @@ from bpoptimizer import Floor
 DIR = os.path.dirname(__file__)
 
 
-def get_floor(file):
-    return Floor(os.path.join(DIR, f"floors/{file}.png"))
+def get_floor(file, interval=0.25):
+    return Floor(os.path.join(DIR, f"floors/{file}.png"), interval=interval)
 
 
 class TestFloor:
@@ -58,14 +58,25 @@ class TestOptimize:
     def test_find_spots():
         floor = get_floor("valid_floor")
 
-        assert floor.get_spots() == [(23, 23), (23, 24), (24, 23), (24, 24)]
-        assert floor.get_spots(reachable_distance=16) == [
-            (21, 22),
-            (21, 25),
-            (22, 21),
-            (22, 26),
-            (25, 21),
-            (25, 26),
-            (26, 22),
-            (26, 25),
+        assert floor.get_spots() == [
+            (23.75, 23.75),
+            (23.75, 24.0),
+            (24.0, 23.75),
+            (24.0, 24.0),
         ]
+        assert floor.get_spots(reachable_distance=16) == [
+            (20.75, 23.75),
+            (20.75, 24.0),
+            (23.75, 20.75),
+            (23.75, 27.0),
+            (24.0, 20.75),
+            (24.0, 27.0),
+            (27.0, 23.75),
+            (27.0, 24.0),
+        ]
+
+    @staticmethod
+    def test_different_interval():
+        floor = get_floor("valid_floor", interval=0.5)
+
+        assert floor.get_spots(reachable_distance=10) == [(18.0, 29.5), (29.5, 17.5)]

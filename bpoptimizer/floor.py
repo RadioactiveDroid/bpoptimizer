@@ -19,14 +19,6 @@ class Floor:
     FLOOR_WIDTH = 48
     MAX_COLOURS = 16
 
-    SPOT_SCALE = 4  # The number of points to consider for each block in each dimension
-    COORDS = list(  # Construct list of all possible standing coordinates
-        itertools.product(
-            np.linspace(0, FLOOR_WIDTH - (1 / SPOT_SCALE), FLOOR_WIDTH * SPOT_SCALE),
-            np.linspace(0, FLOOR_WIDTH - (1 / SPOT_SCALE), FLOOR_WIDTH * SPOT_SCALE),
-        )
-    )
-
     # Constants to recolour and scale floor for display purposes
     BLACK = (0, 0, 0)
     WHITE = (255, 255, 255)
@@ -51,13 +43,17 @@ class Floor:
     }
     CANVAS_SCALE = 30
 
-    def __init__(self, image: Union[str, np.ndarray]):
+    def __init__(self, image: Union[str, np.ndarray], interval: float = 0.25):
         """Reads an image file representing a BlockParty floor and store an internal
         representation of it
 
         Args:
             image (Union[str, np.ndarray]): path to image of floor or a valid numpy
                                             array representation of an image
+            interval (float, optional): dictates how fine the spot calculation will be,
+                                        defaults to 0.25 meaning that every position
+                                        checked will be 0.25 blocks apart.
+                                        Note: values below 0.25 can get very slow!
 
         Attributes:
             floor (np.ndarray): the internal 2D representation of the floor where each
@@ -93,8 +89,20 @@ class Floor:
             f"given floor has {self.count}"
         )
 
+        assert (
+            interval > 0 and interval <= 1
+        ), f"Interval must be within the bounds (0, 1], given {interval}"
+
+        # Construct list of all possible standing coordinates
+        edge_points = np.linspace(
+            0, self.FLOOR_WIDTH - interval, int(self.FLOOR_WIDTH / interval)
+        )
+        self._coords = list(itertools.product(edge_points, edge_points))
+        self._interval = interval
+
         self._recolour = True  # Whether canvas needs to be recoloured before display
-        self._optimized = False  # Whether the optimization matrix has been calculated
+
+        self._optimize()
 
     @property
     def count(self) -> int:
@@ -125,7 +133,7 @@ class Floor:
         # Used to offset coordinates to where they should be drawn in display
         def offset(spot: Tuple[float, float]):
             return tuple(
-                int((x + (0.5 / self.SPOT_SCALE)) * scale)  # type: ignore
+                int((x + (0.5 * self._interval)) * scale)  # type: ignore
                 for x in spot
             )
 
@@ -166,9 +174,6 @@ class Floor:
             )
 
         if spot:
-            if not self._optimized:
-                self._optimize()
-
             if scale < 20:
                 warnings.warn(
                     "A scale below 20 will likely result in an unreadable image."
@@ -264,23 +269,24 @@ class Floor:
         of every colour other than the position itself along with the euclidean distance
         to that location.
         """
-        # Scale up floor using Kronecker product to match scale of COORDS
-        scaled_floor = np.kron(self.floor, np.ones((self.SPOT_SCALE, self.SPOT_SCALE)))
-        target_dict = pd.DataFrame(None, index=self.COORDS)
+        # Scale up floor using Kronecker product to match scale of coords
+        scaled_floor = np.kron(
+            self.floor, np.ones((int(1 / self._interval), int(1 / self._interval)))
+        )
+        target_dict = pd.DataFrame(None, index=self._coords)
 
         for colour in tqdm(range(self.count)):
             # Create k-d tree for all coordinate matching the current colour
             tree = cKDTree(
-                np.array(self.COORDS)[
-                    (scaled_floor == colour).reshape(len(self.COORDS))
+                np.array(self._coords)[
+                    (scaled_floor == colour).reshape(len(self._coords))
                 ]
             )
 
-            distance, target = tree.query(self.COORDS, k=1)
+            distance, target = tree.query(self._coords, k=1)
             target_dict[colour] = list(zip(tree.data[target], distance))
 
         self._target_dict = target_dict.to_dict("index")
-        self._optimized = True
 
     def get_spots(
         self, reachable_distance: float = float("inf")
@@ -303,10 +309,7 @@ class Floor:
         """
         max_colours, min_farthest, min_total = None, None, None
 
-        if not self._optimized:
-            self._optimize()
-
-        for spot in tqdm(self.COORDS):
+        for spot in tqdm(self._coords):
             distances = np.array(list(zip(*self._target_dict[spot].values()))[1])
 
             colours = sum(np.where(distances <= reachable_distance, 1, 0))
