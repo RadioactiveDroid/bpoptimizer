@@ -26,7 +26,7 @@ test_requirements = ["pytest>=3"]
 setup(
     author="RadioactiveDroid",
     author_email="radioactivedroid@gmail.com",
-    python_requires=">=3.7,<3.8",
+    python_requires=">=3.7",
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Intended Audience :: Developers",
