@@ -5,6 +5,7 @@ import os
 import random
 import itertools
 import warnings
+from decimal import Decimal
 
 import numpy as np
 import pandas as pd
@@ -94,9 +95,10 @@ class Floor:
         ), f"Interval must be within the bounds (0, 1], given {interval}"
 
         # Construct list of all possible standing coordinates
-        edge_points = np.linspace(
-            0, self.FLOOR_WIDTH - interval, int(self.FLOOR_WIDTH / interval)
-        )
+        edge_points = [
+            i * Decimal(str(interval))
+            for i in range(0, int(self.FLOOR_WIDTH / interval))
+        ]
         self._coords = list(itertools.product(edge_points, edge_points))
         self._interval = interval
 
@@ -133,7 +135,7 @@ class Floor:
         # Used to offset coordinates to where they should be drawn in display
         def offset(spot: Tuple[float, float]):
             return tuple(
-                int((x + (0.5 * self._interval)) * scale)  # type: ignore
+                int((float(x) + (0.5 * self._interval)) * scale)  # type: ignore
                 for x in spot
             )
 
