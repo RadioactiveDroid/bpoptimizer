@@ -47,16 +47,17 @@ class Floor:
         representation of it
 
         Args:
-            image (Union[str, np.ndarray]): path to image of floor or a valid numpy
-                                            array representation of an image
-            interval (float, optional): dictates how fine the spot calculation will be,
-                                        defaults to 0.25 meaning that every position
-                                        checked will be 0.25 blocks apart.
-                                        Note: values below 0.25 can get very slow!
+            image (Union[str, np.ndarray]):
+                path to image of floor or a valid numpy array representation of an image
+            interval (float, optional):
+                dictates how fine the spot calculation will be, defaults to 0.25 meaning
+                that every position checked will be 0.25 blocks apart.
+                Note: values below 0.25 can get very slow!
 
         Attributes:
-            floor (np.ndarray): the internal 2D representation of the floor where each
-                                unique colour is a different integer
+            floor (np.ndarray):
+                the internal 2D representation of the floor where each unique colour is
+                a different integer
 
         Raises:
             TypeError: if provided floor is not a path as string or numpy array
@@ -106,11 +107,7 @@ class Floor:
 
     @property
     def count(self) -> int:
-        """Returns the number of colours in the floor
-
-        Returns:
-            int: number of colours in the floor
-        """
+        """Number of colours in the floor"""
         return len(np.unique(self.floor))
 
     def display(
@@ -119,15 +116,18 @@ class Floor:
         """Displays an image of the floor
 
         Args:
-            spot (Tuple[int, int]): if provided, draws the location, lines to all unique
-                                    colours from the location and writes the distance to
-                                    farther away colours as well
-            scale (int, optional): factor to upscale original image by, defaults to 30
-            path (str, optional): saves image to specified path if provided along with
-                                  returning image as numpy array
+            spot (Tuple[int, int]):
+                if provided, draws the location, lines to all unique colours from the
+                location and writes the distance to farther away colours as well
+            scale (int, optional):
+                factor to upscale original image by, defaults to 30
+            path (str, optional):
+                saves image to specified path if provided along with returning image as
+                numpy array
 
         Returns:
-            np.ndarray: the image to display represented as a numpy array
+            np.ndarray:
+                the image to display represented as a numpy array
         """
 
         # Used to offset coordinates to where they should be drawn in display
@@ -242,7 +242,8 @@ class Floor:
         represented by a unique integer
 
         Args:
-            image (np.ndarray): the image to simplify
+            image (np.ndarray):
+                the image to simplify
 
         Returns:
             np.ndarray: the simplified image with the same height and width dimensions
@@ -298,8 +299,9 @@ class Floor:
         left, all are returned.
 
         Args:
-            reachable_distance (float, optional): the maximum number of blocks that you
-                                                  can travel, no limit if not provided
+            reachable_distance (float, optional):
+                the maximum number of blocks that you can travel,
+                no limit if not provided
 
         Returns:
             List[Tuple[int, int]]: a list of coords for the best spots
