@@ -21,8 +21,8 @@ deploy:
     password:
       secure: bVN0BKXkYX6q6MraLwO9TLD3C6f2CF6C4aqBAvYY3zPWCq/UnweHu50aw567OoF06NGTjlwJ5DdaLbHMTkfDZGsjZmuDjo7tJuiOocTTOA22C4Pnhv/+ZeFIdn3o0Axt1E1gX90F0ZKbjKPH2z7hB0HITEK3xGYyiHeKszVfYRDxAF11dEzHw9hONrkoYyprQeI7vaDjt4YjcAogXbBSVsuT6eQVaWncqsaIeNmI00i29spelPpYRimfoNeJoZkWsDpcARwHiR4LnwI7S+nwxbB1aWlAvBBKAF654HjIsOg2xSYwh9IGbYiHjvHGVyekBv68H+4mvYpUGu1HaQjA7sufUSZf6YbeQZmtYG+l9N9yojpX8Rx6xUdLcAO4NJXFa/oryy6ULYHphDk0pARy23QeljDNGs7fHMBnT1mbkUM1T7Fqn1w/Ynu9WD4VrQSxb3lIKI/act3Zy0tSr/m1m2vPnQ0VKoZBwK4pjqXcBxXVc5w+iMcrOe3KHXL1FETM1l3QTufPNSYRwKTjqsvnA7kZCPMFkrzxAAqf9Uib/HnCq2trq0BWtk2OC+ZzHBa5CjgqX6v2ZMhJN8QlewsMe0HHpHqFPAdQUlyPlGqAWNE3cVWDPAtWS384z6Gux4XUy1z7RkUFcROANbWPP2vzZ8wqrNleM6jimuLweaAnIJk=
     on:
+      tags: true
       repo: RadioactiveDroid/bpoptimizer
-      branch: master
       python: 3.7
   - provider: pages
     skip_cleanup: true
