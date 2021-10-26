@@ -17,7 +17,6 @@ from tqdm import tqdm
 
 class Floor:
     # Used to define requirements expected of given floor
-    FLOOR_WIDTH = 48
     MAX_COLOURS = 16
 
     # Constants to recolour and scale floor for display purposes
@@ -78,11 +77,12 @@ class Floor:
                 f"floor must be either a str path or numpy array, given {type(image)}"
             )
 
-        assert image.shape[0] == image.shape[1] == self.FLOOR_WIDTH, (
-            f"provided floor must be square of side length {self.FLOOR_WIDTH},"
+        assert image.shape[0] == image.shape[1], (
+            f"provided floor must be square,"
             f"given floor has dimensions {image.shape[:2]}"
         )
 
+        self.width = image.shape[0]
         self.floor = self.simplify_image(image)
 
         assert self.count <= 16, (
@@ -96,8 +96,7 @@ class Floor:
 
         # Construct list of all possible standing coordinates
         edge_points = [
-            i * Decimal(str(interval))
-            for i in range(0, int(self.FLOOR_WIDTH / interval))
+            i * Decimal(str(interval)) for i in range(0, int(self.width / interval))
         ]
         self._coords = list(itertools.product(edge_points, edge_points))
         self._interval = interval
@@ -145,7 +144,7 @@ class Floor:
                 np.vectorize(lambda i: list(self.CANVAS_COLOURS.values())[i])(
                     self.floor.flatten()
                 )
-            ).T.reshape(self.FLOOR_WIDTH, self.FLOOR_WIDTH, 3)
+            ).T.reshape(self.width, self.width, 3)
 
             self._recolour = False
 
@@ -159,18 +158,18 @@ class Floor:
             self._canvas, None, fx=scale, fy=scale, interpolation=cv2.INTER_NEAREST
         )
 
-        for line in range(0, self.FLOOR_WIDTH * scale, scale):
+        for line in range(0, self.width * scale, scale):
             cv2.line(
                 canvas,
                 (line, 0),
-                (line, self.FLOOR_WIDTH * scale),
+                (line, self.width * scale),
                 color=self.BLACK,
                 thickness=1,
             )
             cv2.line(
                 canvas,
                 (0, line),
-                (self.FLOOR_WIDTH * scale, line),
+                (self.width * scale, line),
                 color=self.BLACK,
                 thickness=1,
             )

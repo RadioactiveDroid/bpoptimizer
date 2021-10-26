@@ -43,9 +43,9 @@ class TestFloorExceptions:
             Floor(0)
 
     @staticmethod
-    def test_wrong_size():
+    def test_not_square():
         with pytest.raises(AssertionError):
-            get_floor("wrong_size")
+            get_floor("not_square")
 
     @staticmethod
     def test_too_many_colours():
