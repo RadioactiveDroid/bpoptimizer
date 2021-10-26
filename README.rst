@@ -20,7 +20,7 @@ This package allows for reading a BlockParty floor as a 48x48 pixel image and pr
 
 
 * Free software: MIT license
-* Documentation: https://bpoptimizer.readthedocs.io.
+* Documentation: https://radioactivedroid.github.io/bpoptimizer/.
 
 
 Features
