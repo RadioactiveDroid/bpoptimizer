@@ -16,9 +16,6 @@ from tqdm import tqdm
 
 
 class Floor:
-    # Used to define requirements expected of given floor
-    MAX_COLOURS = 16
-
     # Constants to recolour and scale floor for display purposes
     BLACK = (0, 0, 0)
     WHITE = (255, 255, 255)
@@ -41,7 +38,9 @@ class Floor:
         14: BLACK,  # Black
         15: WHITE,  # White
     }
-    CANVAS_SCALE = 30
+
+    # Used to define requirements expected of given floor
+    MAX_COLOURS = len(CANVAS_COLOURS)
 
     def __init__(self, image: Union[str, np.ndarray], interval: float = 0.25):
         """Reads an image file representing a BlockParty floor and store an internal
@@ -115,7 +114,7 @@ class Floor:
         return len(np.unique(self.floor))
 
     def display(
-        self, spot: Tuple[int, int] = None, scale: int = None, path: str = None
+        self, spot: Tuple[int, int] = None, scale: int = 30, path: str = None
     ) -> np.ndarray:
         """Displays an image of the floor
 
@@ -147,9 +146,6 @@ class Floor:
             ).T.reshape(self.width, self.width, 3)
 
             self._recolour = False
-
-        if scale is None:
-            scale = self.CANVAS_SCALE
 
         thickness = round(scale / 10)
         text_scale = scale / 45
