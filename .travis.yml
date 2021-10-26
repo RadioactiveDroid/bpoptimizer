@@ -8,7 +8,10 @@ python:
 install: pip install -U tox-travis
 
 # Command to run tests, e.g. python setup.py test
-script: tox
+script:
+  - tox
+  - make -C docs/ html
+  - touch docs/build/html/.nojekyll
 
 # Assuming you have installed the travis-ci CLI tool, after you
 # create the Github repo and add it to Travis, run the
@@ -24,9 +27,11 @@ deploy:
       tags: true
       repo: RadioactiveDroid/bpoptimizer
       python: 3.7
-  - provider: pages
-    skip_cleanup: true
+  - provider: pages:git
+    verbose: true
     github_token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
+    edge: true
+    local_dir: ./docs/build/html/
     keep_history: true
     on:
       branch: master

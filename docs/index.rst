@@ -1,5 +1,5 @@
 Welcome to BlockParty Floor Optimizer's documentation!
-======================================
+======================================================
 
 .. toctree::
    :maxdepth: 2
