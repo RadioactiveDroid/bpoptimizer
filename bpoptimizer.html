@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bpoptimizer package &mdash; BlockParty Floor Optimizer 1.3.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Contributing" href="contributing.html" />
+    <link rel="prev" title="bpoptimizer" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> BlockParty Floor Optimizer
+          </a>
+              <div class="version">
+                1.3.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">BlockParty Floor Optimizer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">bpoptimizer</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">bpoptimizer package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-bpoptimizer.floor">bpoptimizer.floor module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BlockParty Floor Optimizer</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">bpoptimizer</a> &raquo;</li>
+      <li>bpoptimizer package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/bpoptimizer.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="bpoptimizer-package">
+<h1>bpoptimizer package<a class="headerlink" href="#bpoptimizer-package" title="Permalink to this headline"></a></h1>
+<section id="module-bpoptimizer.floor">
+<span id="bpoptimizer-floor-module"></span><h2>bpoptimizer.floor module<a class="headerlink" href="#module-bpoptimizer.floor" title="Permalink to this headline"></a></h2>
+<p>This class is used for internally representing a BlockParty floor</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bpoptimizer.floor.Floor">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">bpoptimizer.floor.</span></span><span class="sig-name descname"><span class="pre">Floor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.25</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bpoptimizer/floor.html#Floor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpoptimizer.floor.Floor" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bpoptimizer.floor.Floor.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.25</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bpoptimizer/floor.html#Floor.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpoptimizer.floor.Floor.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Reads an image file representing a BlockParty floor and store an internal
+representation of it</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>image (Union[str, np.ndarray]):</dt><dd><p>path to image of floor or a valid numpy array representation of an image</p>
+</dd>
+<dt>interval (float, optional):</dt><dd><p>dictates how fine the spot calculation will be, defaults to 0.25 meaning
+that every position checked will be 0.25 blocks apart.
+Note: values below 0.25 can get very slow!</p>
+</dd>
+</dl>
+</dd>
+<dt>Attributes:</dt><dd><dl class="simple">
+<dt>floor (np.ndarray):</dt><dd><p>the internal 2D representation of the floor where each unique colour is
+a different integer</p>
+</dd>
+</dl>
+</dd>
+<dt>Raises:</dt><dd><p>TypeError: if provided floor is not a path as string or numpy array
+FileNotFoundError: if provided path is invalid
+AssertionError: if floor is of unexpected size or has too many colours</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bpoptimizer.floor.Floor.BLACK">
+<span class="sig-name descname"><span class="pre">BLACK</span></span><em class="property"> <span class="pre">=</span> <span class="pre">(0,</span> <span class="pre">0,</span> <span class="pre">0)</span></em><a class="headerlink" href="#bpoptimizer.floor.Floor.BLACK" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bpoptimizer.floor.Floor.CANVAS_COLOURS">
+<span class="sig-name descname"><span class="pre">CANVAS_COLOURS</span></span><em class="property"> <span class="pre">=</span> <span class="pre">{0:</span> <span class="pre">(255,</span> <span class="pre">0,</span> <span class="pre">0),</span> <span class="pre">1:</span> <span class="pre">(255,</span> <span class="pre">152,</span> <span class="pre">173),</span> <span class="pre">2:</span> <span class="pre">(255,</span> <span class="pre">165,</span> <span class="pre">0),</span> <span class="pre">3:</span> <span class="pre">(255,</span> <span class="pre">255,</span> <span class="pre">0),</span> <span class="pre">4:</span> <span class="pre">(191,</span> <span class="pre">255,</span> <span class="pre">0),</span> <span class="pre">5:</span> <span class="pre">(0,</span> <span class="pre">255,</span> <span class="pre">0),</span> <span class="pre">6:</span> <span class="pre">(0,</span> <span class="pre">128,</span> <span class="pre">128),</span> <span class="pre">7:</span> <span class="pre">(48,</span> <span class="pre">204,</span> <span class="pre">255),</span> <span class="pre">8:</span> <span class="pre">(0,</span> <span class="pre">0,</span> <span class="pre">255),</span> <span class="pre">9:</span> <span class="pre">(128,</span> <span class="pre">0,</span> <span class="pre">128),</span> <span class="pre">10:</span> <span class="pre">(255,</span> <span class="pre">0,</span> <span class="pre">255),</span> <span class="pre">11:</span> <span class="pre">(101,</span> <span class="pre">67,</span> <span class="pre">33),</span> <span class="pre">12:</span> <span class="pre">(100,</span> <span class="pre">100,</span> <span class="pre">100),</span> <span class="pre">13:</span> <span class="pre">(220,</span> <span class="pre">220,</span> <span class="pre">220),</span> <span class="pre">14:</span> <span class="pre">(0,</span> <span class="pre">0,</span> <span class="pre">0),</span> <span class="pre">15:</span> <span class="pre">(255,</span> <span class="pre">255,</span> <span class="pre">255)}</span></em><a class="headerlink" href="#bpoptimizer.floor.Floor.CANVAS_COLOURS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bpoptimizer.floor.Floor.MAX_COLOURS">
+<span class="sig-name descname"><span class="pre">MAX_COLOURS</span></span><em class="property"> <span class="pre">=</span> <span class="pre">16</span></em><a class="headerlink" href="#bpoptimizer.floor.Floor.MAX_COLOURS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bpoptimizer.floor.Floor.WHITE">
+<span class="sig-name descname"><span class="pre">WHITE</span></span><em class="property"> <span class="pre">=</span> <span class="pre">(255,</span> <span class="pre">255,</span> <span class="pre">255)</span></em><a class="headerlink" href="#bpoptimizer.floor.Floor.WHITE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bpoptimizer.floor.Floor.count">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">count</span></span><em class="property"><span class="pre">:</span> <span class="pre">int</span></em><a class="headerlink" href="#bpoptimizer.floor.Floor.count" title="Permalink to this definition"></a></dt>
+<dd><p>Number of colours in the floor</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bpoptimizer.floor.Floor.display">
+<span class="sig-name descname"><span class="pre">display</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spot</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference internal" href="_modules/bpoptimizer/floor.html#Floor.display"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpoptimizer.floor.Floor.display" title="Permalink to this definition"></a></dt>
+<dd><p>Displays an image of the floor</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>spot (Tuple[int, int]):</dt><dd><p>if provided, draws the location, lines to all unique colours from the
+location and writes the distance to farther away colours as well</p>
+</dd>
+<dt>scale (int, optional):</dt><dd><p>factor to upscale original image by, defaults to 30</p>
+</dd>
+<dt>path (str, optional):</dt><dd><p>saves image to specified path if provided along with returning image as
+numpy array</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>np.ndarray:</dt><dd><p>the image to display represented as a numpy array</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bpoptimizer.floor.Floor.get_spots">
+<span class="sig-name descname"><span class="pre">get_spots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reachable_distance</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">inf</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/bpoptimizer/floor.html#Floor.get_spots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpoptimizer.floor.Floor.get_spots" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a list of the best spots based on how far you are able to travel</p>
+<p>For determining the best spots, we first try to maximize the number of unique
+colours that can be reached, from those candidates we take the ones which
+minimize the distance to the farthest colour that can be reached and finally
+we reduce those candidates by taking the spots with the lowest sum of squared
+distances to the colours that can be reached. If there are multiple candidates
+left, all are returned.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>reachable_distance (float, optional):</dt><dd><p>the maximum number of blocks that you can travel,
+no limit if not provided</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><p>List[Tuple[int, int]]: a list of coords for the best spots</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bpoptimizer.floor.Floor.shuffle">
+<span class="sig-name descname"><span class="pre">shuffle</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/bpoptimizer/floor.html#Floor.shuffle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpoptimizer.floor.Floor.shuffle" title="Permalink to this definition"></a></dt>
+<dd><p>Shuffles colours used for floor display</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bpoptimizer.floor.Floor.simplify_image">
+<em class="property"><span class="pre">static</span> </em><span class="sig-name descname"><span class="pre">simplify_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference internal" href="_modules/bpoptimizer/floor.html#Floor.simplify_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpoptimizer.floor.Floor.simplify_image" title="Permalink to this definition"></a></dt>
+<dd><p>Removes pixel data from an image to produce an array where each pixel is
+represented by a unique integer</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>image (np.ndarray):</dt><dd><p>the image to simplify</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><p>np.ndarray: the simplified image with the same height and width dimensions</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modules.html" class="btn btn-neutral float-left" title="bpoptimizer" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="contributing.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, RadioactiveDroid.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
