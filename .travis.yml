@@ -31,10 +31,11 @@ deploy:
       repo: RadioactiveDroid/bpoptimizer
       python: 3.7
   - provider: pages:git
+    skip-cleanup: true
     verbose: true
     github_token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
     edge: true
-    local_dir: ./docs/build/html/
+    local_dir: ./docs/_build/html/
     keep_history: true
     on:
       branch: master
