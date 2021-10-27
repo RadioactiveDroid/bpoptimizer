@@ -7,12 +7,7 @@ BlockParty Floor Optimizer
         :target: https://pypi.python.org/pypi/bpoptimizer
 
 .. image:: https://img.shields.io/travis/RadioactiveDroid/bpoptimizer.svg
-        :target: https://travis-ci.org/RadioactiveDroid/bpoptimizer
-
-.. image:: https://readthedocs.org/projects/bpoptimizer/badge/?version=latest
-        :target: https://bpoptimizer.readthedocs.io/en/latest/?badge=latest
-        :alt: Documentation Status
-
+        :target: https://app.travis-ci.com/RadioactiveDroid/bpoptimizer
 
 
 
@@ -20,7 +15,7 @@ This package allows for reading a BlockParty floor as a 48x48 pixel image and pr
 
 
 * Free software: MIT license
-* Documentation: https://radioactivedroid.github.io/bpoptimizer/.
+* Documentation: https://radioactivedroid.github.io/bpoptimizer/
 
 
 Features
