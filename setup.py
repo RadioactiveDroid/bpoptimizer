@@ -16,7 +16,6 @@ requirements = [
     "opencv-python>=4.1.2",
     "scipy>=1.4.1",
     "tqdm>=4.45.0",
-    "pandas>=1.0.3",
 ]
 
 setup_requirements = ["pytest-runner"]
