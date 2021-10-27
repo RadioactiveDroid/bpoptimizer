@@ -64,6 +64,7 @@ class TestOptimize:
             (24.0, 23.75),
             (24.0, 24.0),
         ]
+
         assert floor.get_spots(reachable_distance=16) == [
             (20.75, 23.75),
             (20.75, 24.0),
@@ -79,4 +80,7 @@ class TestOptimize:
     def test_different_interval():
         floor = get_floor("valid_floor", interval=0.5)
 
-        assert floor.get_spots(reachable_distance=10) == [(18.0, 29.5), (29.5, 17.5)]
+        spots = floor.get_spots(reachable_distance=10)
+
+        assert len(spots) == 16
+        assert all([(spot in spots) for spot in ((18.0, 29.5), (29.5, 17.5))])
