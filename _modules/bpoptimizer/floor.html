@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>bpoptimizer.floor &mdash; BlockParty Floor Optimizer 1.4.1 documentation</title>
+  <title>bpoptimizer.floor &mdash; BlockParty Floor Optimizer 1.5.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -27,7 +27,7 @@
             <a href="../../index.html" class="icon icon-home"> BlockParty Floor Optimizer
           </a>
               <div class="version">
-                1.4.1
+                1.5.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -78,12 +78,10 @@
 
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">random</span>
-<span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">decimal</span> <span class="kn">import</span> <span class="n">Decimal</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">cKDTree</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">KDTree</span>
 
 <span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
@@ -169,9 +167,7 @@
         <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Interval must be within the bounds (0, 1], given </span><span class="si">{</span><span class="n">interval</span><span class="si">}</span><span class="s2">&quot;</span>
 
         <span class="c1"># Construct list of all possible standing coordinates</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_points</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">i</span> <span class="o">*</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">interval</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">/</span> <span class="n">interval</span><span class="p">))</span>
-        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">interval</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_interval</span> <span class="o">=</span> <span class="n">interval</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_recolour</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Whether canvas needs to be recoloured before display</span>
@@ -184,13 +180,18 @@
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">floor</span><span class="p">))</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_coords</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+    <span class="k">def</span> <span class="nf">_coords</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;The possible standing coordinates that will be checked</span>
 
 <span class="sd">        I chose to compute this on request as opposed to storing it due to the amount</span>
 <span class="sd">        of memory it takes up.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">))</span>  <span class="c1"># type: ignore</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">)),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">)),</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
 
 <div class="viewcode-block" id="Floor.display"><a class="viewcode-back" href="../../bpoptimizer.html#bpoptimizer.floor.Floor.display">[docs]</a>    <span class="k">def</span> <span class="nf">display</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">spot</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
@@ -217,7 +218,7 @@
             <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
                 <span class="nb">int</span><span class="p">((</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="p">))</span> <span class="o">*</span> <span class="n">scale</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
                 <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">spot</span>
-            <span class="p">)</span>
+            <span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_recolour</span><span class="p">:</span>
             <span class="c1"># We map each integer to a colour, turning our floor into a list of pixels</span>
@@ -252,14 +253,14 @@
                 <span class="n">thickness</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">spot</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">spot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">scale</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">:</span>
                 <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                     <span class="s2">&quot;A scale below 20 will likely result in an unreadable image.&quot;</span>
                 <span class="p">)</span>
 
-            <span class="n">spot_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_point_to_index</span><span class="p">(</span><span class="n">spot</span><span class="p">)</span>
-            <span class="n">spot_location</span> <span class="o">=</span> <span class="n">offset</span><span class="p">(</span><span class="n">spot</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">spot_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points_to_indicies</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">spot</span><span class="p">]))[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">spot_location</span> <span class="o">=</span> <span class="n">offset</span><span class="p">(</span><span class="n">spot</span><span class="p">)</span>
 
             <span class="n">cv2</span><span class="o">.</span><span class="n">circle</span><span class="p">(</span>
                 <span class="n">canvas</span><span class="p">,</span>
@@ -270,8 +271,9 @@
                 <span class="n">lineType</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">LINE_AA</span><span class="p">,</span>
             <span class="p">)</span>
 
-            <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target_dict</span><span class="p">[</span><span class="n">spot_index</span><span class="p">]:</span>
-                <span class="n">target_location</span> <span class="o">=</span> <span class="n">offset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="p">[</span><span class="n">target</span><span class="p">])[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">targets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_indicies_to_points</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_target_dict</span><span class="p">[</span><span class="n">spot_index</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
+                <span class="n">target_location</span> <span class="o">=</span> <span class="n">offset</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
 
                 <span class="n">cv2</span><span class="o">.</span><span class="n">line</span><span class="p">(</span>
                     <span class="n">canvas</span><span class="p">,</span>
@@ -283,10 +285,8 @@
                 <span class="p">)</span>
 
             <span class="c1"># We make two seperate loops to ensure that text is always above lines</span>
-            <span class="k">for</span> <span class="n">target</span><span class="p">,</span> <span class="n">distance</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_target_dict</span><span class="p">[</span><span class="n">spot_index</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_distance_dict</span><span class="p">[</span><span class="n">spot_index</span><span class="p">]</span>
-            <span class="p">):</span>
-                <span class="n">target_location</span> <span class="o">=</span> <span class="n">offset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="p">[</span><span class="n">target</span><span class="p">])[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">target</span><span class="p">,</span> <span class="n">distance</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_distance_dict</span><span class="p">[</span><span class="n">spot_index</span><span class="p">]):</span>
+                <span class="n">target_location</span> <span class="o">=</span> <span class="n">offset</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
 
                 <span class="k">if</span> <span class="n">distance</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
                     <span class="n">cv2</span><span class="o">.</span><span class="n">putText</span><span class="p">(</span>
@@ -344,11 +344,21 @@
 
         <span class="k">return</span> <span class="n">image</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span>  <span class="c1"># Reshape to original size</span></div>
 
-    <span class="k">def</span> <span class="nf">_point_to_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span>
-            <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">)</span>
-            <span class="o">+</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">point</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="p">)</span>
-        <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_points_to_indicies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Simplify list of coordinate to unsigned integer representation&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">)</span>
+            <span class="o">+</span> <span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;uint32&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_indicies_to_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indicies</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Retrieve list of coordinates from unsigned integers used to represent them&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="p">(</span><span class="n">indicies</span> <span class="o">//</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">indicies</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">T</span>
 
     <span class="k">def</span> <span class="nf">_optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Builds the target dictionary for every position on the given floor</span>
@@ -357,32 +367,26 @@
 <span class="sd">        of every colour other than the position itself along with the euclidean distance</span>
 <span class="sd">        to that location.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coords</span>
+
         <span class="c1"># Scale up floor using Kronecker product to match scale of coords</span>
         <span class="n">scaled_floor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">floor</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="p">)))</span>
         <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_target_dict</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint32&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_distance_dict</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_target_dict</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_target_dict</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint32&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_distance_dict</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_target_dict</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float16&quot;</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">colour</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">)):</span>
             <span class="c1"># Create k-d tree for all coordinate matching the current colour</span>
-            <span class="n">tree</span> <span class="o">=</span> <span class="n">cKDTree</span><span class="p">(</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="p">)[</span>
-                    <span class="p">(</span><span class="n">scaled_floor</span> <span class="o">==</span> <span class="n">colour</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="p">))</span>
-                <span class="p">]</span>
-            <span class="p">)</span>
+            <span class="n">tree</span> <span class="o">=</span> <span class="n">KDTree</span><span class="p">(</span><span class="n">coords</span><span class="p">[(</span><span class="n">scaled_floor</span> <span class="o">==</span> <span class="n">colour</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()])</span>
 
-            <span class="n">distance</span><span class="p">,</span> <span class="n">target</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">workers</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">distance</span><span class="p">,</span> <span class="n">target</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">workers</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">_target_dict</span><span class="p">[:,</span> <span class="n">colour</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
-                <span class="nb">map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_point_to_index</span><span class="p">,</span> <span class="n">tree</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">target</span><span class="p">])</span>
-            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_target_dict</span><span class="p">[:,</span> <span class="n">colour</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points_to_indicies</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">target</span><span class="p">])</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_distance_dict</span><span class="p">[:,</span> <span class="n">colour</span><span class="p">]</span> <span class="o">=</span> <span class="n">distance</span>
 
-<div class="viewcode-block" id="Floor.get_spots"><a class="viewcode-back" href="../../bpoptimizer.html#bpoptimizer.floor.Floor.get_spots">[docs]</a>    <span class="k">def</span> <span class="nf">get_spots</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">reachable_distance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+<div class="viewcode-block" id="Floor.get_spots"><a class="viewcode-back" href="../../bpoptimizer.html#bpoptimizer.floor.Floor.get_spots">[docs]</a>    <span class="k">def</span> <span class="nf">get_spots</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reachable_distance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Returns a list of the best spots based on how far you are able to travel</span>
 
 <span class="sd">        For determining the best spots, we first try to maximize the number of unique</span>
@@ -402,12 +406,22 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">max_colours</span><span class="p">,</span> <span class="n">min_farthest</span><span class="p">,</span> <span class="n">min_total</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
 
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">spot</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="p">)):</span>
-            <span class="n">distances</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_distance_dict</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">spot_stats</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_distance_dict</span> <span class="o">&lt;=</span> <span class="n">reachable_distance</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_distance_dict</span> <span class="o">&lt;=</span> <span class="n">reachable_distance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_distance_dict</span><span class="p">,</span> <span class="mi">0</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_distance_dict</span> <span class="o">&lt;=</span> <span class="n">reachable_distance</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_distance_dict</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span>
+                    <span class="mi">0</span><span class="p">,</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">T</span>
 
-            <span class="n">colours</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">distances</span> <span class="o">&lt;=</span> <span class="n">reachable_distance</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
-            <span class="n">farthest</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">distances</span> <span class="o">&lt;=</span> <span class="n">reachable_distance</span><span class="p">,</span> <span class="n">distances</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
-            <span class="n">total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">distances</span> <span class="o">&lt;=</span> <span class="n">reachable_distance</span><span class="p">,</span> <span class="n">distances</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">spot</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_target_dict</span><span class="p">))):</span>
+            <span class="n">colours</span><span class="p">,</span> <span class="n">farthest</span><span class="p">,</span> <span class="n">total</span> <span class="o">=</span> <span class="n">spot_stats</span><span class="p">[</span><span class="n">spot</span><span class="p">]</span>
 
             <span class="k">if</span> <span class="p">(</span>
                 <span class="ow">not</span> <span class="n">max_colours</span>
@@ -431,7 +445,7 @@
             <span class="p">):</span>
                 <span class="n">optimal_spot</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spot</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">optimal_spot</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_indicies_to_points</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">optimal_spot</span><span class="p">))</span></div></div>
 </pre></div>
 
            </div>
