@@ -58,23 +58,24 @@ class TestOptimize:
     def test_find_spots():
         floor = get_floor("valid_floor")
 
-        assert floor.get_spots() == [
-            (23.75, 23.75),
-            (23.75, 24.0),
-            (24.0, 23.75),
-            (24.0, 24.0),
-        ]
+        np.testing.assert_array_equal(
+            floor.get_spots(),
+            [[23.75, 23.75], [23.75, 24.0], [24.0, 23.75], [24.0, 24.0]],
+        )
 
-        assert floor.get_spots(reachable_distance=16) == [
-            (20.75, 23.75),
-            (20.75, 24.0),
-            (23.75, 20.75),
-            (23.75, 27.0),
-            (24.0, 20.75),
-            (24.0, 27.0),
-            (27.0, 23.75),
-            (27.0, 24.0),
-        ]
+        np.testing.assert_array_equal(
+            floor.get_spots(reachable_distance=16),
+            [
+                (20.75, 23.75),
+                (20.75, 24.0),
+                (23.75, 20.75),
+                (23.75, 27.0),
+                (24.0, 20.75),
+                (24.0, 27.0),
+                (27.0, 23.75),
+                (27.0, 24.0),
+            ],
+        )
 
     @staticmethod
     def test_different_interval():
