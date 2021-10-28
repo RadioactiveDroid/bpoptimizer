@@ -6,7 +6,7 @@ import random
 import warnings
 
 import numpy as np
-from scipy.spatial import cKDTree
+from scipy.spatial import KDTree
 
 import cv2
 from tqdm import tqdm
@@ -304,7 +304,7 @@ class Floor:
 
         for colour in tqdm(range(self.count)):
             # Create k-d tree for all coordinate matching the current colour
-            tree = cKDTree(coords[(scaled_floor == colour).flatten()])
+            tree = KDTree(coords[(scaled_floor == colour).flatten()])
 
             distance, target = tree.query(coords, k=1, workers=-1)
 
