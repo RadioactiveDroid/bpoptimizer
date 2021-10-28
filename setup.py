@@ -14,7 +14,7 @@ requirements = [
     "Click>=7.0",
     "numpy>=1.18",
     "opencv-python>=4.1.2",
-    "scipy>=1.4.1",
+    "scipy>=1.6.0",
     "tqdm>=4.45.0",
 ]
 
