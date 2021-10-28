@@ -3,9 +3,7 @@ from typing import List, Tuple, Union
 
 import os
 import random
-import itertools
 import warnings
-from decimal import Decimal
 
 import numpy as np
 from scipy.spatial import cKDTree
@@ -94,9 +92,7 @@ class Floor:
         ), f"Interval must be within the bounds (0, 1], given {interval}"
 
         # Construct list of all possible standing coordinates
-        self._points = [
-            i * Decimal(str(interval)) for i in range(0, int(self.width / interval))
-        ]
+        self._points = np.arange(0, self.width, interval)
         self._interval = interval
 
         self._recolour = True  # Whether canvas needs to be recoloured before display
@@ -109,13 +105,18 @@ class Floor:
         return len(np.unique(self.floor))
 
     @property
-    def _coords(self) -> List[Tuple[float, float]]:
+    def _coords(self) -> np.ndarray:
         """The possible standing coordinates that will be checked
 
         I chose to compute this on request as opposed to storing it due to the amount
         of memory it takes up.
         """
-        return list(itertools.product(self._points, self._points))  # type: ignore
+        return np.transpose(
+            [
+                np.repeat(self._points, len(self._points)),
+                np.tile(self._points, len(self._points)),
+            ]
+        )
 
     def display(
         self, spot: Tuple[int, int] = None, scale: int = 30, path: str = None
@@ -142,7 +143,7 @@ class Floor:
             return tuple(
                 int((float(x) + (0.5 * self._interval)) * scale)  # type: ignore
                 for x in spot
-            )
+            )[::-1]
 
         if self._recolour:
             # We map each integer to a colour, turning our floor into a list of pixels
@@ -177,14 +178,14 @@ class Floor:
                 thickness=1,
             )
 
-        if spot:
+        if spot is not None:
             if scale < 20:
                 warnings.warn(
                     "A scale below 20 will likely result in an unreadable image."
                 )
 
-            spot_index = self._point_to_index(spot)
-            spot_location = offset(spot)[::-1]
+            spot_index = self._points_to_indicies(np.array([spot]))[0]
+            spot_location = offset(spot)
 
             cv2.circle(
                 canvas,
@@ -195,8 +196,9 @@ class Floor:
                 lineType=cv2.LINE_AA,
             )
 
-            for target in self._target_dict[spot_index]:
-                target_location = offset(self._coords[target])[::-1]
+            targets = self._indicies_to_points(self._target_dict[spot_index])
+            for target in targets:
+                target_location = offset(target)
 
                 cv2.line(
                     canvas,
@@ -208,10 +210,8 @@ class Floor:
                 )
 
             # We make two seperate loops to ensure that text is always above lines
-            for target, distance in zip(
-                self._target_dict[spot_index], self._distance_dict[spot_index]
-            ):
-                target_location = offset(self._coords[target])[::-1]
+            for target, distance in zip(targets, self._distance_dict[spot_index]):
+                target_location = offset(target)
 
                 if distance > 2:
                     cv2.putText(
@@ -269,11 +269,21 @@ class Floor:
 
         return image.reshape(dims)  # Reshape to original size
 
-    def _point_to_index(self, point: Tuple[float, float]) -> int:
-        return int(
-            (float(point[0]) / self._interval) * len(self._points)
-            + (float(point[1]) / self._interval)
-        )
+    def _points_to_indicies(self, points: np.ndarray) -> np.ndarray:
+        """Simplify list of coordinate to unsigned integer representation"""
+        return (
+            (points[:, 0] / self._interval) * len(self._points)
+            + (points[:, 1] / self._interval)
+        ).astype("uint32")
+
+    def _indicies_to_points(self, indicies: np.ndarray) -> np.ndarray:
+        """Retrieve list of coordinates from unsigned integers used to represent them"""
+        return np.stack(
+            (
+                (indicies // len(self._points)) * self._interval,
+                (indicies % len(self._points)) * self._interval,
+            )
+        ).T
 
     def _optimize(self) -> None:
         """Builds the target dictionary for every position on the given floor
@@ -282,32 +292,26 @@ class Floor:
         of every colour other than the position itself along with the euclidean distance
         to that location.
         """
+        coords = self._coords
+
         # Scale up floor using Kronecker product to match scale of coords
         scaled_floor = np.kron(
             self.floor, np.ones((int(1 / self._interval), int(1 / self._interval)))
         )
 
-        self._target_dict = np.empty((len(self._coords), self.count), dtype="uint32")
-        self._distance_dict = np.empty(self._target_dict.shape, dtype="float32")
+        self._target_dict = np.empty((len(coords), self.count), dtype="uint32")
+        self._distance_dict = np.empty(self._target_dict.shape, dtype="float16")
 
         for colour in tqdm(range(self.count)):
             # Create k-d tree for all coordinate matching the current colour
-            tree = cKDTree(
-                np.array(self._coords)[
-                    (scaled_floor == colour).reshape(len(self._coords))
-                ]
-            )
+            tree = cKDTree(coords[(scaled_floor == colour).flatten()])
 
-            distance, target = tree.query(self._coords, k=1, workers=-1)
+            distance, target = tree.query(coords, k=1, workers=-1)
 
-            self._target_dict[:, colour] = list(
-                map(self._point_to_index, tree.data[target])
-            )
+            self._target_dict[:, colour] = self._points_to_indicies(tree.data[target])
             self._distance_dict[:, colour] = distance
 
-    def get_spots(
-        self, reachable_distance: float = float("inf")
-    ) -> List[Tuple[int, int]]:
+    def get_spots(self, reachable_distance: float = float("inf")) -> np.ndarray:
         """Returns a list of the best spots based on how far you are able to travel
 
         For determining the best spots, we first try to maximize the number of unique
@@ -327,12 +331,22 @@ class Floor:
         """
         max_colours, min_farthest, min_total = None, None, None
 
-        for i, spot in enumerate(tqdm(self._coords)):
-            distances = self._distance_dict[i, :]
+        spot_stats = np.stack(
+            (
+                np.where(self._distance_dict <= reachable_distance, 1, 0).sum(axis=1),
+                np.where(
+                    self._distance_dict <= reachable_distance, self._distance_dict, 0
+                ).max(axis=1),
+                np.where(
+                    self._distance_dict <= reachable_distance,
+                    self._distance_dict ** 2,
+                    0,
+                ).sum(axis=1),
+            )
+        ).T
 
-            colours = sum(np.where(distances <= reachable_distance, 1, 0))
-            farthest = max(np.where(distances <= reachable_distance, distances, 0))
-            total = sum(np.where(distances <= reachable_distance, distances ** 2, 0))
+        for spot in tqdm(range(len(self._target_dict))):
+            colours, farthest, total = spot_stats[spot]
 
             if (
                 not max_colours
@@ -356,4 +370,4 @@ class Floor:
             ):
                 optimal_spot.append(spot)
 
-        return optimal_spot
+        return self._indicies_to_points(np.array(optimal_spot))
