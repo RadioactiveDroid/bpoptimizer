@@ -7,6 +7,7 @@ import warnings
 
 import numpy as np
 from scipy.spatial import KDTree
+from scipy.spatial.distance import cdist
 
 import cv2
 from tqdm import tqdm
@@ -362,4 +363,9 @@ class Floor:
         ).sum(axis=1)
         total_mask = farthest_mask[total == total.min()]
 
-        return self._indicies_to_points(total_mask)
+        spots = self._indicies_to_points(total_mask)
+        distances = cdist(spots, [[self.width / 2, self.width / 2]]).reshape(
+            spots.shape[0]
+        )
+
+        return spots[distances.argsort()]
