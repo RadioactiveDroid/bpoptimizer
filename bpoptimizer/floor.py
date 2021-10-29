@@ -16,9 +16,10 @@ class Floor:
     # Constants to recolour and scale floor for display purposes
     BLACK = (0, 0, 0)
     WHITE = (255, 255, 255)
+    RED = (255, 0, 0)
 
     CANVAS_COLOURS = {
-        0: (255, 0, 0),  # Red
+        0: RED,  # Red
         1: (255, 152, 173),  # Pink
         2: (255, 165, 0),  # Orange
         3: (255, 255, 0),  # Yellow
@@ -119,14 +120,21 @@ class Floor:
         )
 
     def display(
-        self, spot: Tuple[int, int] = None, scale: int = 30, path: str = None
+        self,
+        spot: np.ndarray = None,
+        reachable_distance: float = float("inf"),
+        scale: int = 30,
+        path: str = None,
     ) -> np.ndarray:
         """Displays an image of the floor
 
         Args:
-            spot (Tuple[int, int]):
+            spot (np.ndarray, optional):
                 if provided, draws the location, lines to all unique colours from the
                 location and writes the distance to farther away colours as well
+            rechable_distance (float, optional):
+                if provided, highlights any spots that would be too far to reach from
+                the spot being display
             scale (int, optional):
                 factor to upscale original image by, defaults to 30
             path (str, optional):
@@ -184,7 +192,7 @@ class Floor:
                     "A scale below 20 will likely result in an unreadable image."
                 )
 
-            spot_index = self._points_to_indicies(np.array([spot]))[0]
+            spot_index = self._points_to_indicies(spot.reshape(1, 2))[0]
             spot_location = offset(spot)
 
             cv2.circle(
@@ -197,20 +205,23 @@ class Floor:
             )
 
             targets = self._indicies_to_points(self._target_dict[spot_index])
-            for target in targets:
+            distances = self._distance_dict[spot_index]
+
+            for target, distance in zip(targets, distances):
                 target_location = offset(target)
+                line_colour = self.WHITE if distance <= reachable_distance else self.RED
 
                 cv2.line(
                     canvas,
                     spot_location,
                     target_location,
-                    color=self.WHITE,
+                    color=line_colour,
                     thickness=thickness,
                     lineType=cv2.LINE_AA,
                 )
 
             # We make two seperate loops to ensure that text is always above lines
-            for target, distance in zip(targets, self._distance_dict[spot_index]):
+            for target, distance in zip(targets, distances):
                 target_location = offset(target)
 
                 if distance > 2:
