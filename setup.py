@@ -47,6 +47,6 @@ setup(
     test_suite="tests",
     tests_require=test_requirements,
     url="https://github.com/RadioactiveDroid/bpoptimizer",
-    version="1.5.0",
+    version="1.6.0",
     zip_safe=False,
 )
