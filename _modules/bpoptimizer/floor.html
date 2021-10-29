@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>bpoptimizer.floor &mdash; BlockParty Floor Optimizer 1.6.0 documentation</title>
+  <title>bpoptimizer.floor &mdash; BlockParty Floor Optimizer 2.0.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -27,7 +27,7 @@
             <a href="../../index.html" class="icon icon-home"> BlockParty Floor Optimizer
           </a>
               <div class="version">
-                1.6.0
+                2.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -82,6 +82,7 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">KDTree</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial.distance</span> <span class="kn">import</span> <span class="n">cdist</span>
 
 <span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
@@ -91,9 +92,10 @@
     <span class="c1"># Constants to recolour and scale floor for display purposes</span>
     <span class="n">BLACK</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="n">WHITE</span> <span class="o">=</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
+    <span class="n">RED</span> <span class="o">=</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
     <span class="n">CANVAS_COLOURS</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="mi">0</span><span class="p">:</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>  <span class="c1"># Red</span>
+        <span class="mi">0</span><span class="p">:</span> <span class="n">RED</span><span class="p">,</span>  <span class="c1"># Red</span>
         <span class="mi">1</span><span class="p">:</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">152</span><span class="p">,</span> <span class="mi">173</span><span class="p">),</span>  <span class="c1"># Pink</span>
         <span class="mi">2</span><span class="p">:</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">165</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>  <span class="c1"># Orange</span>
         <span class="mi">3</span><span class="p">:</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>  <span class="c1"># Yellow</span>
@@ -194,14 +196,21 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="Floor.display"><a class="viewcode-back" href="../../bpoptimizer.html#bpoptimizer.floor.Floor.display">[docs]</a>    <span class="k">def</span> <span class="nf">display</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">spot</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">spot</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">reachable_distance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">),</span>
+        <span class="n">scale</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
+        <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Displays an image of the floor</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            spot (Tuple[int, int]):</span>
+<span class="sd">            spot (np.ndarray, optional):</span>
 <span class="sd">                if provided, draws the location, lines to all unique colours from the</span>
 <span class="sd">                location and writes the distance to farther away colours as well</span>
+<span class="sd">            rechable_distance (float, optional):</span>
+<span class="sd">                if provided, highlights any spots that would be too far to reach from</span>
+<span class="sd">                the spot being display</span>
 <span class="sd">            scale (int, optional):</span>
 <span class="sd">                factor to upscale original image by, defaults to 30</span>
 <span class="sd">            path (str, optional):</span>
@@ -259,7 +268,7 @@
                     <span class="s2">&quot;A scale below 20 will likely result in an unreadable image.&quot;</span>
                 <span class="p">)</span>
 
-            <span class="n">spot_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points_to_indicies</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">spot</span><span class="p">]))[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">spot_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points_to_indicies</span><span class="p">(</span><span class="n">spot</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">spot_location</span> <span class="o">=</span> <span class="n">offset</span><span class="p">(</span><span class="n">spot</span><span class="p">)</span>
 
             <span class="n">cv2</span><span class="o">.</span><span class="n">circle</span><span class="p">(</span>
@@ -272,20 +281,23 @@
             <span class="p">)</span>
 
             <span class="n">targets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_indicies_to_points</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_target_dict</span><span class="p">[</span><span class="n">spot_index</span><span class="p">])</span>
-            <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
+            <span class="n">distances</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_distance_dict</span><span class="p">[</span><span class="n">spot_index</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">target</span><span class="p">,</span> <span class="n">distance</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">distances</span><span class="p">):</span>
                 <span class="n">target_location</span> <span class="o">=</span> <span class="n">offset</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+                <span class="n">line_colour</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">WHITE</span> <span class="k">if</span> <span class="n">distance</span> <span class="o">&lt;=</span> <span class="n">reachable_distance</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">RED</span>
 
                 <span class="n">cv2</span><span class="o">.</span><span class="n">line</span><span class="p">(</span>
                     <span class="n">canvas</span><span class="p">,</span>
                     <span class="n">spot_location</span><span class="p">,</span>
                     <span class="n">target_location</span><span class="p">,</span>
-                    <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">WHITE</span><span class="p">,</span>
+                    <span class="n">color</span><span class="o">=</span><span class="n">line_colour</span><span class="p">,</span>
                     <span class="n">thickness</span><span class="o">=</span><span class="n">thickness</span><span class="p">,</span>
                     <span class="n">lineType</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">LINE_AA</span><span class="p">,</span>
                 <span class="p">)</span>
 
             <span class="c1"># We make two seperate loops to ensure that text is always above lines</span>
-            <span class="k">for</span> <span class="n">target</span><span class="p">,</span> <span class="n">distance</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_distance_dict</span><span class="p">[</span><span class="n">spot_index</span><span class="p">]):</span>
+            <span class="k">for</span> <span class="n">target</span><span class="p">,</span> <span class="n">distance</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">distances</span><span class="p">):</span>
                 <span class="n">target_location</span> <span class="o">=</span> <span class="n">offset</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
 
                 <span class="k">if</span> <span class="n">distance</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
@@ -426,7 +438,12 @@
         <span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">total_mask</span> <span class="o">=</span> <span class="n">farthest_mask</span><span class="p">[</span><span class="n">total</span> <span class="o">==</span> <span class="n">total</span><span class="o">.</span><span class="n">min</span><span class="p">()]</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_indicies_to_points</span><span class="p">(</span><span class="n">total_mask</span><span class="p">)</span></div></div>
+        <span class="n">spots</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_indicies_to_points</span><span class="p">(</span><span class="n">total_mask</span><span class="p">)</span>
+        <span class="n">distances</span> <span class="o">=</span> <span class="n">cdist</span><span class="p">(</span><span class="n">spots</span><span class="p">,</span> <span class="p">[[</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">]])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+            <span class="n">spots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">spots</span><span class="p">[</span><span class="n">distances</span><span class="o">.</span><span class="n">argsort</span><span class="p">()]</span></div></div>
 </pre></div>
 
            </div>

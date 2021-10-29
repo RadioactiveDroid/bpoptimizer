@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>bpoptimizer package &mdash; BlockParty Floor Optimizer 1.6.0 documentation</title>
+  <title>bpoptimizer package &mdash; BlockParty Floor Optimizer 2.0.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -30,7 +30,7 @@
             <a href="index.html" class="icon icon-home"> BlockParty Floor Optimizer
           </a>
               <div class="version">
-                1.6.0
+                2.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -135,6 +135,11 @@ AssertionError: if floor is of unexpected size or has too many colours</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="bpoptimizer.floor.Floor.RED">
+<span class="sig-name descname"><span class="pre">RED</span></span><em class="property"> <span class="pre">=</span> <span class="pre">(255,</span> <span class="pre">0,</span> <span class="pre">0)</span></em><a class="headerlink" href="#bpoptimizer.floor.Floor.RED" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="bpoptimizer.floor.Floor.WHITE">
 <span class="sig-name descname"><span class="pre">WHITE</span></span><em class="property"> <span class="pre">=</span> <span class="pre">(255,</span> <span class="pre">255,</span> <span class="pre">255)</span></em><a class="headerlink" href="#bpoptimizer.floor.Floor.WHITE" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
@@ -147,12 +152,15 @@ AssertionError: if floor is of unexpected size or has too many colours</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="bpoptimizer.floor.Floor.display">
-<span class="sig-name descname"><span class="pre">display</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spot</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference internal" href="_modules/bpoptimizer/floor.html#Floor.display"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpoptimizer.floor.Floor.display" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">display</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spot</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reachable_distance</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference internal" href="_modules/bpoptimizer/floor.html#Floor.display"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpoptimizer.floor.Floor.display" title="Permalink to this definition"></a></dt>
 <dd><p>Displays an image of the floor</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
-<dt>spot (Tuple[int, int]):</dt><dd><p>if provided, draws the location, lines to all unique colours from the
+<dt>spot (np.ndarray, optional):</dt><dd><p>if provided, draws the location, lines to all unique colours from the
 location and writes the distance to farther away colours as well</p>
+</dd>
+<dt>rechable_distance (float, optional):</dt><dd><p>if provided, highlights any spots that would be too far to reach from
+the spot being display</p>
 </dd>
 <dt>scale (int, optional):</dt><dd><p>factor to upscale original image by, defaults to 30</p>
 </dd>
