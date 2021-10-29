@@ -329,45 +329,26 @@ class Floor:
         Returns:
             List[Tuple[int, int]]: a list of coords for the best spots
         """
-        max_colours, min_farthest, min_total = None, None, None
+        # First filter to spots that reach the most colours
+        colours = np.where(self._distance_dict <= reachable_distance, 1, 0).sum(axis=1)
+        colours_mask = (colours == colours.max()).nonzero()[0]
 
-        spot_stats = np.stack(
-            (
-                np.where(self._distance_dict <= reachable_distance, 1, 0).sum(axis=1),
-                np.where(
-                    self._distance_dict <= reachable_distance, self._distance_dict, 0
-                ).max(axis=1),
-                np.where(
-                    self._distance_dict <= reachable_distance,
-                    self._distance_dict ** 2,
-                    0,
-                ).sum(axis=1),
-            )
-        ).T
+        # Next filter to spots that minimize distance to the further unique colour
+        farthest = np.where(
+            self._distance_dict[colours_mask] <= reachable_distance,
+            self._distance_dict[colours_mask],
+            0,
+        ).max(axis=1)
+        farthest_mask = colours_mask[farthest == farthest.min()]
 
-        for spot in tqdm(range(len(self._target_dict))):
-            colours, farthest, total = spot_stats[spot]
+        # Lastly filter to spots which minimize total squared distance to all unique
+        # colours. We use squared distance since having all really close and one really
+        # far colours should be worse than having all at an equally less close distance
+        total = np.where(
+            self._distance_dict[farthest_mask] <= reachable_distance,
+            self._distance_dict[farthest_mask] ** 2,
+            0,
+        ).sum(axis=1)
+        total_mask = farthest_mask[total == total.min()]
 
-            if (
-                not max_colours
-                or max_colours < colours
-                or (max_colours == colours and farthest < min_farthest)
-                or (
-                    max_colours == colours
-                    and farthest == min_farthest
-                    and total < min_total
-                )
-            ):
-                max_colours = colours
-                min_farthest = farthest
-                min_total = total
-
-                optimal_spot = [spot]
-            elif (
-                max_colours == colours
-                and min_farthest == farthest
-                and min_total == total
-            ):
-                optimal_spot.append(spot)
-
-        return self._indicies_to_points(np.array(optimal_spot))
+        return self._indicies_to_points(total_mask)
