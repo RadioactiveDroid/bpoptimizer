@@ -1,9 +1,10 @@
 """This class is used for internally representing a BlockParty floor"""
-from typing import List, Tuple, Union
+from typing import cast, Optional, Tuple, Union
 
 import os
 import random
 import warnings
+from math import pi
 
 import numpy as np
 from scipy.spatial import KDTree
@@ -15,12 +16,11 @@ from tqdm import tqdm
 
 class Floor:
     # Constants to recolour and scale floor for display purposes
-    BLACK = (0, 0, 0)
     WHITE = (255, 255, 255)
     RED = (255, 0, 0)
 
     CANVAS_COLOURS = {
-        0: RED,  # Red
+        0: RED,
         1: (255, 152, 173),  # Pink
         2: (255, 165, 0),  # Orange
         3: (255, 255, 0),  # Yellow
@@ -34,12 +34,17 @@ class Floor:
         11: (101, 67, 33),  # Brown
         12: (100, 100, 100),  # Light Gray
         13: (220, 220, 220),  # Gray
-        14: BLACK,  # Black
-        15: WHITE,  # White
+        14: (30, 30, 30),  # Off Black
+        15: WHITE,
     }
+    GRID_COLOUR = (0, 0, 0)
 
     # Used to define requirements expected of given floor
     MAX_COLOURS = len(CANVAS_COLOURS)
+
+    # Used to define what percent of spots are filtered before sorting by angular spread
+    # The prefilter uses farthest reachable colour as the ranking metric
+    FILTER_PERCENT = 0.01
 
     def __init__(self, image: Union[str, np.ndarray], interval: float = 0.25):
         """Reads an image file representing a BlockParty floor and store an internal
@@ -76,6 +81,7 @@ class Floor:
                 f"floor must be either a str path or numpy array, given {type(image)}"
             )
 
+        image = cast(np.ndarray, image)
         assert image.shape[0] == image.shape[1], (
             f"provided floor must be square,"
             f"given floor has dimensions {image.shape[:2]}"
@@ -148,7 +154,7 @@ class Floor:
         """
 
         # Used to offset coordinates to where they should be drawn in display
-        def offset(spot: Tuple[float, float]) -> Tuple[float, float]:
+        def offset(spot: np.ndarray) -> Tuple[float, float]:
             return tuple(
                 int((float(x) + (0.5 * self._interval)) * scale)  # type: ignore
                 for x in spot
@@ -167,7 +173,7 @@ class Floor:
         thickness = round(scale / 10)
         text_scale = scale / 45
 
-        canvas = cv2.resize(
+        canvas: np.ndarray = cv2.resize(
             self._canvas, None, fx=scale, fy=scale, interpolation=cv2.INTER_NEAREST
         )
 
@@ -176,14 +182,14 @@ class Floor:
                 canvas,
                 (line, 0),
                 (line, self.width * scale),
-                color=self.BLACK,
+                color=self.GRID_COLOUR,
                 thickness=1,
             )
             cv2.line(
                 canvas,
                 (0, line),
                 (self.width * scale, line),
-                color=self.BLACK,
+                color=self.GRID_COLOUR,
                 thickness=1,
             )
 
@@ -207,6 +213,11 @@ class Floor:
 
             targets = self._indicies_to_points(self._target_dict[spot_index])
             distances = self._distance_dict[spot_index]
+
+            # Resort by furthest target first
+            ordering = distances.argsort()[::-1]
+            targets = targets[ordering]
+            distances = distances[ordering]
 
             for target, distance in zip(targets, distances):
                 target_location = offset(target)
@@ -232,7 +243,7 @@ class Floor:
                         target_location,
                         fontFace=cv2.FONT_HERSHEY_DUPLEX,
                         fontScale=text_scale,
-                        color=self.BLACK,
+                        color=self.GRID_COLOUR,
                         thickness=thickness,
                         lineType=cv2.LINE_AA,
                     )
@@ -283,17 +294,20 @@ class Floor:
 
     def _points_to_indicies(self, points: np.ndarray) -> np.ndarray:
         """Simplify list of coordinate to unsigned integer representation"""
-        return (
-            (points[:, 0] / self._interval) * len(self._points)
-            + (points[:, 1] / self._interval)
-        ).astype("uint32")
+        return cast(
+            np.ndarray,
+            np.around(
+                (points[:, 0] / self._interval) * len(self._points)
+                + (points[:, 1] / self._interval)
+            ).astype("uint32"),
+        )
 
     def _indicies_to_points(self, indicies: np.ndarray) -> np.ndarray:
         """Retrieve list of coordinates from unsigned integers used to represent them"""
-        return np.stack(
+        return np.vstack(
             (
-                (indicies // len(self._points)) * self._interval,
-                (indicies % len(self._points)) * self._interval,
+                [(indicies.T // len(self._points)) * self._interval],
+                [(indicies.T % len(self._points)) * self._interval],
             )
         ).T
 
@@ -313,15 +327,24 @@ class Floor:
 
         self._target_dict = np.empty((len(coords), self.count), dtype="uint32")
         self._distance_dict = np.empty(self._target_dict.shape, dtype="float16")
+        self._angle_dict = np.empty(self._target_dict.shape, dtype="float16")
 
         for colour in tqdm(range(self.count)):
             # Create k-d tree for all coordinate matching the current colour
             tree = KDTree(coords[(scaled_floor == colour).flatten()])
 
             distance, target = tree.query(coords, k=1, workers=-1)
+            target_coords = tree.data[target]
 
-            self._target_dict[:, colour] = self._points_to_indicies(tree.data[target])
-            self._distance_dict[:, colour] = distance
+            self._target_dict[:, colour] = self._points_to_indicies(target_coords)
+            self._distance_dict[:, colour] = distance.round(2)
+            self._angle_dict[:, colour] = np.degrees(
+                np.arctan2(
+                    target_coords[:, 1] - coords[:, 1],
+                    target_coords[:, 0] - coords[:, 0],
+                )
+                + pi
+            )
 
     def get_spots(self, reachable_distance: float = float("inf")) -> np.ndarray:
         """Returns a list of the best spots based on how far you are able to travel
@@ -345,27 +368,71 @@ class Floor:
         colours = np.where(self._distance_dict <= reachable_distance, 1, 0).sum(axis=1)
         colours_mask = (colours == colours.max()).nonzero()[0]
 
-        # Next filter to spots that minimize distance to the further unique colour
+        # Prefilter to top 1% of spots which minimize farthest distance. We prefilter
+        # since angular spread is an expensive metric to compute
         farthest = np.where(
             self._distance_dict[colours_mask] <= reachable_distance,
             self._distance_dict[colours_mask],
             0,
         ).max(axis=1)
-        farthest_mask = colours_mask[farthest == farthest.min()]
+        prefilter_count = int(self._coords.shape[0] * self.FILTER_PERCENT)
+        prefilter_mask = colours_mask[farthest.argsort()[:prefilter_count:]]
 
-        # Lastly filter to spots which minimize total squared distance to all unique
-        # colours. We use squared distance since having all really close and one really
-        # far colours should be worse than having all at an equally less close distance
-        total = np.where(
-            self._distance_dict[farthest_mask] <= reachable_distance,
-            self._distance_dict[farthest_mask] ** 2,
+        spots = self._indicies_to_points(prefilter_mask)
+        distances = self._distance_dict[prefilter_mask]
+        angles = self._angle_dict[prefilter_mask]
+
+        # Next determine angular spread of target colours from spot
+        vectorized_angular_spread = np.vectorize(
+            self._angular_spread, signature="(n),(n),(),()->()"
+        )
+        spread = vectorized_angular_spread(angles, distances, reachable_distance, -1)
+
+        # If min spread is over 200°, it's not worth considering. ORing the statement
+        # with this condition gives us all elements if true
+        spread_mask = prefilter_mask[(spread == spread.min()) | (spread.min() > 200)]
+
+        # Finally filter to spots that minimize distance to the further unique colour
+        farthest = np.where(
+            self._distance_dict[spread_mask] <= reachable_distance,
+            self._distance_dict[spread_mask],
             0,
-        ).sum(axis=1)
-        total_mask = farthest_mask[total == total.min()]
+        ).max(axis=1)
+        farthest_mask = spread_mask[farthest == farthest.min()]
 
-        spots = self._indicies_to_points(total_mask)
+        spots = self._indicies_to_points(farthest_mask)
+        # Sort returned spots by closest to middle of floor
         distances = cdist(spots, [[self.width / 2, self.width / 2]]).reshape(
             spots.shape[0]
         )
 
-        return spots[distances.argsort()]
+        return cast(np.ndarray, spots[distances.argsort()])
+
+    @staticmethod
+    def _angular_spread(
+        angles: np.ndarray,
+        distances: np.ndarray,
+        reachable_distance: float,
+        rounding: Optional[int] = None,
+    ) -> float:
+        """Return minumum angle which encompases all points from perspective of origin
+
+        Args:
+            angles (np.ndarray):
+                List of polar coordinates for targets in relation to origin
+            distances (np.ndarray):
+                List of distances for each point from origin in order
+            reachable_distance (float):
+                the maximum number of blocks that you can travel
+            rounding (int, optional):
+                how many decimals to round the result to, defaults to no rounding
+
+        Returns:
+            float: angle of spread in degrees
+        """
+        angles = angles[(0 < distances) & (distances <= reachable_distance)]
+
+        angles.sort()
+        radial_angle: float = 360 - max(angles[1:] - angles[:-1])
+
+        return radial_angle if rounding is None else round(radial_angle, rounding)
