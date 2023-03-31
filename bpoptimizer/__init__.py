@@ -2,7 +2,7 @@
 
 __author__ = """RadioactiveDroid"""
 __email__ = "radioactivedroid@gmail.com"
-__version__ = "2.0.1"
+__version__ = "2.1.0"
 
 
 from .floor import Floor
